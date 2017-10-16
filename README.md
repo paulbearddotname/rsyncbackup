@@ -19,3 +19,19 @@ http://paulbeard.name
 ## Install
 
     sudo install rsyncbackup /usr/local/bin/
+
+## Help
+
+    $ rsyncbackup -h
+    rsyncbackup version 1
+    Copyright (c) 2017 Paul Beard.
+    Website: paulbeard.name
+
+    rsyncbackup is a backup program capable of creating backup directories that mirror the source without duplicating unmodified files.
+
+    Usage: /usr/local/bin/rsyncbackup [-h] SRC_FROM DEST
+
+    Options:
+     -h       show this help
+     SRC_FROM read source list from file
+     DEST     destination directory
