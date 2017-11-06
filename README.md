@@ -23,7 +23,7 @@ http://paulbeard.name
 ## Help
 
     $ rsyncbackup -h
-    rsyncbackup version 1
+    rsyncbackup version 1.0.1
     Copyright (c) 2017 Paul Beard.
     Website: paulbeard.name
 
