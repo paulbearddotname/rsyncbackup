@@ -6,15 +6,9 @@ Each run results in a new backup directory named with the date and time the back
 Each backup directory is a complete mirror of the source.
 Unmodified backup files are hard linked.
 
-Faster but less space efficient than [lnbackup](../../../lnbackup).
-
-## See also
-
-[lnbackup](../../../lnbackup)
-
 ## Website
 
-http://paulbeard.name
+https://paulbeard.name
 
 ## Install
 
