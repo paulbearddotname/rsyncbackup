@@ -17,8 +17,8 @@ https://paulbeard.name
 ## Help
 
     $ rsyncbackup -h
-    rsyncbackup version 1.0.1
-    Copyright (c) 2017 Paul Beard.
+    rsyncbackup version 1.1.0
+    Copyright (c) 2022 Paul Beard.
     Website: paulbeard.name
 
     rsyncbackup is a backup program capable of creating backup directories that mirror the source without duplicating unmodified files.
@@ -26,6 +26,6 @@ https://paulbeard.name
     Usage: /usr/local/bin/rsyncbackup [-h] SRC_FROM DEST
 
     Options:
-     -h       show this help
-     SRC_FROM read source list from file
-     DEST     destination directory
+    -h       show this help
+    SRC_FROM read source list from file
+    DEST     destination directory

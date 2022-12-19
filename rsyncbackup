@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# Copyright (c) 2017 Paul Beard. All rights reserved.
+# Copyright (c) 2022 Paul Beard. All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
 # modification, are permitted provided that the following conditions
@@ -27,8 +27,8 @@
 
 usage ()
 {
-    echo "rsyncbackup version 1.0.1
-Copyright (c) 2017 Paul Beard.
+    echo "rsyncbackup version 1.1.0
+Copyright (c) 2022 Paul Beard.
 Website: paulbeard.name
 
 rsyncbackup is a backup program capable of creating backup directories that mirror the source without duplicating unmodified files.
@@ -43,10 +43,10 @@ Options:
 
 while getopts h OPT
 do
-    case $OPT in
+    case "${OPT?}" in
         *)
             usage
-            [[ $OPT == h ]]
+            [[ "${OPT?}" == h ]]
             exit
             ;;
     esac
@@ -60,8 +60,13 @@ fi
 
 SRC_FROM=$1
 DEST=$2
+if [[ ! "${SRC_FROM?}" || ! "${DEST?}" ]]
+then
+    usage
+    exit 1
+fi
 
-if [[ ! -e $DEST ]]
+if [[ ! -e "${DEST:?}" ]]
 then
     echo 'DEST not found' >&2
     exit 1
@@ -70,7 +75,7 @@ fi
 START=$(date +%Y-%m-%d-%H%M%S) ||
 exit
 
-if [[ -e $DEST/$START ]]
+if [[ -e "${DEST:?}/${START?}" ]]
 then
     echo 'Backup already exists' >&2
 
@@ -88,11 +93,11 @@ trap _trap HUP INT TERM
 
 echo 'Backup started' >&2
 
-mkdir -- "$DEST/$START.incomplete" ||
+mkdir -- "${DEST:?}/${START?}.incomplete" ||
 exit
 
 IFS=$'\n' read -r -d '' -a DEST_BACKUPS <<EOD
-$(find -- "$DEST/" -mindepth 1 -maxdepth 1 -type d -name '[0-9][0-9][0-9][0-9]-[0-9][0-9]-[0-9][0-9]-[0-9][0-9][0-9][0-9][0-9][0-9]' |
+$(find -- "${DEST:?}/" -mindepth 1 -maxdepth 1 -type d -name '[0-9][0-9][0-9][0-9]-[0-9][0-9]-[0-9][0-9]-[0-9][0-9][0-9][0-9][0-9][0-9]' |
     sort |
     tail -n 20 #rsync link-dest limit is 20
 )
@@ -101,13 +106,13 @@ EOD
 LINK_DESTS=()
 for DEST_BACKUP in "${DEST_BACKUPS[@]}"
 do
-    LINK_DESTS+=(--link-dest "$DEST_BACKUP")
+    LINK_DESTS+=(--link-dest "${DEST_BACKUP:?}")
 done
 
-rsync -rRlpogtv --no-implied-dirs "${LINK_DESTS[@]}" --files-from "$SRC_FROM" / "$DEST/$START.incomplete/" |
+rsync -rRlpogtv --no-implied-dirs "${LINK_DESTS[@]}" --files-from "${SRC_FROM:?}" / "${DEST:?}/${START:?}.incomplete/" |
 grep -v '/$' #rsync logs too much on macOS
 
-if [[ -e $DEST/$START ]]
+if [[ -e "${DEST:?}/${START:?}" ]]
 then
     echo 'Backup already exists' >&2
 
@@ -115,11 +120,11 @@ then
     exit 1
 fi
 
-mv    -- "$DEST/$START.incomplete" \
-         "$DEST/$START" &&
-rm -f -- "$DEST/Latest" &&
-ln -s -- "$START" \
-         "$DEST/Latest" ||
+mv    -- "${DEST:?}/${START:?}.incomplete" \
+         "${DEST:?}/${START:?}" &&
+rm -f -- "${DEST:?}/Latest" &&
+ln -s -- "${START:?}" \
+         "${DEST:?}/Latest" ||
 exit
 
 echo 'Backup complete' >&2
@@ -140,22 +145,22 @@ exit
 
 SRC_C=1 WEEK_C=2 DATE_C=3 TIMESTAMP_C=4 WEEK_I_C=5 DATE_I_C=6
 
-find -- "$DEST/" -mindepth 1 -maxdepth 1 -type d -name '[0-9][0-9][0-9][0-9]-[0-9][0-9]-[0-9][0-9]-[0-9][0-9][0-9][0-9][0-9][0-9]' |
-awk -F '\t' -v 'OFS=\t' -v "P=$DEST" -v "C=$SRC_C" 'BEGIN{L=length(P)}{$C=substr($C,L+1);sub(/^\/+/,"",$C);print}' |
-sort -t $'\t' -k $SRC_C,$SRC_C |
+find -- "${DEST:?}/" -mindepth 1 -maxdepth 1 -type d -name '[0-9][0-9][0-9][0-9]-[0-9][0-9]-[0-9][0-9]-[0-9][0-9][0-9][0-9][0-9][0-9]' |
+awk -F '\t' -v 'OFS=\t' -v "P=${DEST:?}" -v "C=${SRC_C:?}" 'BEGIN{L=length(P)}{$C=substr($C,L+1);sub(/^\/+/,"",$C);print}' |
+sort -t $'\t' -k "${SRC_C:?},${SRC_C:?}" |
 
 awk '$0=substr($0,1,10)" "substr($0,12,2)":"substr($0,14,2)":"substr($0,16,2)' | #%Y-%m-%d-%H%M%S -> %Y-%m-%d %H:%M:%S
 xargs -I {} date "${DATE_ISO[@]}" {} +%Y-%m-%d-%H%M%S%t%G%V%t%Y%m%d%t%s | #%Y-%m-%d %H:%M:%S -> %Y-%m-%d-%H%M%S%t%G%V%t%Y%m%d%t%s
 
-awk -F '\t' -v 'OFS=\t' -v "C=$WEEK_C" '{if($C!=P)I=0;P=$C;print$0,I++}' |
-awk -F '\t' -v 'OFS=\t' -v "C=$DATE_C" '{if($C!=P)I=0;P=$C;print$0,I++}' |
+awk -F '\t' -v 'OFS=\t' -v "C=${WEEK_C:?}" '{if($C!=P)I=0;P=$C;print$0,I++}' |
+awk -F '\t' -v 'OFS=\t' -v "C=${DATE_C:?}" '{if($C!=P)I=0;P=$C;print$0,I++}' |
 
-awk -F '\t' -v "SRC_C=$SRC_C" -v "TIMESTAMP_C=$TIMESTAMP_C" -v "WEEK_I_C=$WEEK_I_C" -v "DATE_I_C=$DATE_I_C" -v "MONTH_AGO=$MONTH_AGO" -v "DAY_AGO=$DAY_AGO" \
+awk -F '\t' -v "SRC_C=${SRC_C:?}" -v "TIMESTAMP_C=${TIMESTAMP_C:?}" -v "WEEK_I_C=${WEEK_I_C:?}" -v "DATE_I_C=${DATE_I_C:?}" -v "MONTH_AGO=${MONTH_AGO:?}" -v "DAY_AGO=${DAY_AGO:?}" \
     '{if($TIMESTAMP_C<=MONTH_AGO&&$WEEK_I_C!=0||MONTH_AGO<$TIMESTAMP_C&&$TIMESTAMP_C<=DAY_AGO&&$DATE_I_C!=0)print$SRC_C}' |
 
 while read -r BACKUP
 do
-    echo "Removing old backup: $BACKUP" >&2
+    echo "Removing old backup: ${BACKUP:?}" >&2
 
     rm -rf -- "${DEST:?}/${BACKUP:?}"
 done
